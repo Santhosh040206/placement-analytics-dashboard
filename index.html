@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Campus Placement Analytics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div class="wrap">
+
+  <!-- AUTH SCREEN -->
+  <section id="authScreen" class="auth-screen">
+    <div class="auth-card">
+      <p class="eyebrow">Placement Cell · Portal</p>
+      <h1>Campus Placement <em>Analytics</em></h1>
+      <p class="sub">Sign in to submit your details, post offers, or manage the cohort dataset.</p>
+
+      <div class="tab-row" id="authTabs">
+        <button data-tab="login" class="tab active">Login</button>
+        <button data-tab="signup" class="tab">Sign up</button>
+      </div>
+
+      <form id="loginForm" class="auth-form">
+        <label>Email<input type="email" name="email" required /></label>
+        <label>Password<input type="password" name="password" required /></label>
+        <button type="submit" class="btn-primary">Enter dashboard</button>
+        <p class="hint">Admin demo: <b>admin@campus.edu</b> / <b>admin123</b></p>
+      </form>
+
+      <form id="signupForm" class="auth-form hidden">
+        <label>Full name<input name="name" required maxlength="80" /></label>
+        <label>Email<input type="email" name="email" required /></label>
+        <label>Password<input type="password" name="password" required minlength="6" /></label>
+        <label>I am a
+          <select name="role" required>
+            <option value="student">Student</option>
+            <option value="company">Recruiter / Company</option>
+          </select>
+        </label>
+        <button type="submit" class="btn-primary">Create account</button>
+      </form>
+      <p id="authMsg" class="auth-msg"></p>
+    </div>
+  </section>
+
+  <!-- APP -->
+  <div id="app" class="hidden">
+    <header class="top">
+      <div class="top-row">
+        <div>
+          <p class="eyebrow">Cohort 2026 · <span id="userRoleLabel">Student</span></p>
+          <h1>Campus Placement <em>Analytics</em></h1>
+          <p class="sub">Signed in as <b id="userNameLabel"></b> — <span id="userEmailLabel"></span></p>
+        </div>
+        <button id="logoutBtn" class="btn-ghost">Log out</button>
+      </div>
+      <nav class="nav-tabs" id="navTabs"></nav>
+    </header>
+
+    <!-- DASHBOARD -->
+    <section data-view="dashboard" class="view">
+      <div class="ledger" id="ledger"></div>
+
+      <div class="grid-2">
+        <div class="panel">
+          <h3>Placement rate by branch</h3>
+          <p class="desc">Share of students placed within each department</p>
+          <div class="chart-box"><canvas id="chartRate"></canvas></div>
+        </div>
+        <div class="panel">
+          <h3>Average package by branch</h3>
+          <p class="desc">Mean annual CTC (LPA) among placed students</p>
+          <div class="chart-box"><canvas id="chartPkg"></canvas></div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="panel">
+          <h3>CGPA vs. package</h3>
+          <p class="desc">Every placed student plotted by academic score and offer size</p>
+          <div class="chart-box"><canvas id="chartScatter"></canvas></div>
+        </div>
+        <div class="panel">
+          <h3>Top recruiting companies</h3>
+          <p class="desc">Ranked by number of offers extended this cohort</p>
+          <div class="chart-box"><canvas id="chartCompanies"></canvas></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="section-head"><h2>Student ledger</h2><span class="section-note" id="rowCount"></span></div>
+        <div style="overflow:auto">
+          <table class="data-table" id="studentTable">
+            <thead><tr><th>Name</th><th>Branch</th><th>CGPA</th><th>Status</th><th>Company</th><th>Package (LPA)</th><th id="actionsHead" class="hidden">Actions</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- STUDENT SELF-REGISTER -->
+    <section data-view="student" class="view hidden">
+      <div class="panel">
+        <div class="section-head"><h2>Your placement record</h2></div>
+        <p class="desc">Submit or update your entry. It appears in the cohort dataset immediately.</p>
+        <form id="studentForm" class="form-grid">
+          <label>Full name<input name="name" required maxlength="80" /></label>
+          <label>Branch
+            <select name="branch" required>
+              <option value="">Select…</option><option>CSE</option><option>ECE</option><option>EEE</option><option>ME</option><option>CE</option><option>IT</option>
+            </select>
+          </label>
+          <label>CGPA<input name="cgpa" type="number" step="0.01" min="0" max="10" required /></label>
+          <label>Skills (comma separated)<input name="skills" maxlength="200" placeholder="Python, SQL, React" /></label>
+          <label>Status
+            <select name="status" required id="statusField">
+              <option value="Not placed">Not placed</option>
+              <option value="Placed">Placed</option>
+            </select>
+          </label>
+          <label>Company<input name="company" maxlength="80" /></label>
+          <label>Package (LPA)<input name="package" type="number" step="0.1" min="0" max="200" /></label>
+          <button type="submit" class="btn-primary">Save my record</button>
+        </form>
+        <p id="studentFormMsg" class="auth-msg"></p>
+      </div>
+    </section>
+
+    <!-- COMPANY POST OFFER -->
+    <section data-view="company" class="view hidden">
+      <div class="panel">
+        <div class="section-head"><h2>Post an offer</h2></div>
+        <p class="desc">Log an offer extended by your company. Matches an existing student by name + branch, or creates a new placed entry.</p>
+        <form id="offerForm" class="form-grid">
+          <label>Company name<input name="company" required maxlength="80" /></label>
+          <label>Student name<input name="name" required maxlength="80" /></label>
+          <label>Branch
+            <select name="branch" required>
+              <option value="">Select…</option><option>CSE</option><option>ECE</option><option>EEE</option><option>ME</option><option>CE</option><option>IT</option>
+            </select>
+          </label>
+          <label>CGPA (optional)<input name="cgpa" type="number" step="0.01" min="0" max="10" /></label>
+          <label>Package (LPA)<input name="package" type="number" step="0.1" min="0" max="200" required /></label>
+          <button type="submit" class="btn-primary">Record offer</button>
+        </form>
+        <p id="offerFormMsg" class="auth-msg"></p>
+      </div>
+    </section>
+
+    <!-- ADMIN -->
+    <section data-view="admin" class="view hidden">
+      <div class="panel">
+        <div class="section-head"><h2>Add student record</h2></div>
+        <form id="adminForm" class="form-grid">
+          <label>Full name<input name="name" required maxlength="80" /></label>
+          <label>Branch
+            <select name="branch" required>
+              <option value="">Select…</option><option>CSE</option><option>ECE</option><option>EEE</option><option>ME</option><option>CE</option><option>IT</option>
+            </select>
+          </label>
+          <label>CGPA<input name="cgpa" type="number" step="0.01" min="0" max="10" required /></label>
+          <label>Status
+            <select name="status" required>
+              <option value="Not placed">Not placed</option>
+              <option value="Placed">Placed</option>
+            </select>
+          </label>
+          <label>Company<input name="company" maxlength="80" /></label>
+          <label>Package (LPA)<input name="package" type="number" step="0.1" min="0" max="200" /></label>
+          <button type="submit" class="btn-primary">Add record</button>
+        </form>
+      </div>
+
+      <div class="panel">
+        <div class="section-head"><h2>CSV bulk upload</h2></div>
+        <p class="desc">Header row required: <code>name,branch,cgpa,status,company,package</code></p>
+        <input type="file" id="csvFile" accept=".csv" />
+        <button id="csvBtn" class="btn-primary" style="margin-left:.5rem">Import CSV</button>
+        <button id="csvSample" class="btn-ghost" style="margin-left:.5rem">Download sample</button>
+        <p id="csvMsg" class="auth-msg"></p>
+      </div>
+
+      <div class="panel">
+        <div class="section-head"><h2>Dataset controls</h2></div>
+        <button id="seedBtn" class="btn-ghost">Seed 220 demo records</button>
+        <button id="exportBtn" class="btn-ghost">Export CSV</button>
+        <button id="clearBtn" class="btn-danger">Clear all data</button>
+      </div>
+    </section>
+
+    <footer>
+      <span>Cohort 2026 · placement analytics · data saved in your browser</span>
+      <span>Built with HTML · Chart.js · localStorage</span>
+    </footer>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
